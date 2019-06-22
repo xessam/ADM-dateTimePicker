@@ -29,28 +29,30 @@
     String.prototype.lZero = function() {
         return (this.length<2 ? '0'+this : this);
     };
-    Array.prototype.toNumber = function() {
-        return this.map(function(item) {return Number(item);});
+    Number.prototype.lZero = function() {
+        return (this<10 ? '0'+this : this);
     };
-    Array.prototype.dtp_toDate = function(type) {
+    Date.prototype.dtp_shortDate = function () {
+        return dtp_toDate([this.getFullYear(), this.getMonth() + 1, this.getDate()]);
+    }
+
+    function toNumber () {
+        return this.map(function(item) {return Number(item);});
+    }
+
+    function dtp_toDate(array, type) {
         var splitter = '-';
         if (/invalid/i.test(new Date('1991-9-12')))
             splitter = '/';
 
-        var date = this.join(splitter);
-        if (this.length == 5)
-            date = this.slice(0,3).join(splitter) +' '+ this.slice(3,5).join(':')
+        var date = array.join(splitter);
+        if (array.length == 5)
+            date = array.slice(0, 3).join(splitter) + ' ' + array.slice(3, 5).join(':')
         if (!type) return date;
         date = new Date(date);
         if (type == 'unix')
             return date.getTime();
         return date;
-    };
-    Number.prototype.lZero = function() {
-        return (this<10 ? '0'+this : this);
-    };
-    Date.prototype.dtp_shortDate = function () {
-        return [this.getFullYear(), this.getMonth() + 1, this.getDate()].dtp_toDate();
     }
 
     var ADMdtpProvider = function() {
@@ -532,7 +534,7 @@
             if (date.year<=99)
                 date.year = ((type == 'jalali') ? 1300+date.year : 2000+date.year);
 
-            return [date.year, date.month.lZero(), date.day.lZero(), date.hour.lZero(), date.minute.lZero()].dtp_toDate();
+            return dtp_toDate([date.year, date.month.lZero(), date.day.lZero(), date.hour.lZero(), date.minute.lZero()]);
         };
         this.isDateEqual = function(date1, date2) {
             var diff = new Date(date1) - new Date(date2);
@@ -550,7 +552,7 @@
             return new Date(new Date(new Date(date).setHours(time.hour)).setMinutes(time.minute));
         };
         this.removeTime = function(date) {
-            return [date.getFullYear(), date.getMonth()+1, date.getDate()].dtp_toDate('date');
+            return dtp_toDate([date.getFullYear(), date.getMonth()+1, date.getDate()], 'date');
         }
         this.validateJalaliDateSeparate = function(date, time) {
             if (date.length!=3 || time.length!=2)
@@ -598,7 +600,7 @@
 
             if (this.validateJalaliDateSeparate(_date, _time)) {
                 var _gDateC = ADMdtpConvertor.toGregorian(_date[0],_date[1],_date[2]);
-                var _gDate = [_gDateC.year, _gDateC.month, _gDateC.day, _time[0], _time[1]].dtp_toDate('date');
+                var _gDate = dtp_toDate([_gDateC.year, _gDateC.month, _gDateC.day, _time[0], _time[1]], 'date');
 
                 return {
                     year: _date[0],
@@ -1006,7 +1008,7 @@
                     }
                     else {
                         _mainDate = ADMdtpConvertor.toGregorian(_cur.year, _cur.month, 15);
-                        _mainDate = [_mainDate.year, _mainDate.month, _mainDate.day].dtp_toDate('date');
+                        _mainDate = dtp_toDate([_mainDate.year, _mainDate.month, _mainDate.day], 'date');
                     }
 
                     if (scope.dtpValue.unix) {
@@ -1385,7 +1387,7 @@
 
                     if ($scope.calType == 'jalali') {
                         var _gDate = ADMdtpConvertor.toGregorian(date.year, date.month, 29);
-                        date = [_gDate.year, _gDate.month, _gDate.day].dtp_toDate('date');
+                        date = dtp_toDate([_gDate.year, _gDate.month, _gDate.day], 'date');
                     }
 
                     var _input = {
@@ -1409,11 +1411,11 @@
                         shift = 0, startDay = 6;
 
                     var _today = new Date();
-                    _today = [_today.getFullYear(), _today.getMonth()+1, _today.getDate(), 1, 0].dtp_toDate('unix');
+                    _today = dtp_toDate([_today.getFullYear(), _today.getMonth()+1, _today.getDate(), 1, 0], 'unix');
 
                     var _selected = ($scope.dtpValue.unix || -1), _selectedIdx;
 
-                    var _currDay = [_input.year, _input.month, _input.day, 1, 0].dtp_toDate('date');
+                    var _currDay = dtp_toDate([_input.year, _input.month, _input.day, 1, 0], 'date');
                     var _firstDayName = new Date(angular.copy(_currDay).setDate(1)).getDay();
 
                     var _days = [];
@@ -1511,7 +1513,7 @@
                 this.reload = function() {
                     var _cur = angular.copy($scope.current);
                     _cur.day = 29;
-                    var _date = [_cur.year, _cur.month, 8].dtp_toDate('date');
+                    var _date = dtp_toDate([_cur.year, _cur.month, 8], 'date');
                     if ($scope.calType == 'jalali')
                         _date = _cur;
                     this.fillDays(_date, !$scope.option.transition);
